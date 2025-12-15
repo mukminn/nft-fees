@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Contract } from 'ethers';
 import { ERC721_ABI, CONTRACT_ADDRESS } from '../config/contract';
 
@@ -9,20 +9,29 @@ export function useERC721(provider, signer) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const contract = provider && signer 
-    ? new Contract(CONTRACT_ADDRESS, ERC721_ABI, signer)
-    : provider
-    ? new Contract(CONTRACT_ADDRESS, ERC721_ABI, provider)
-    : null;
+  const contract = useMemo(() => {
+    if (!provider || !CONTRACT_ADDRESS || CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+      return null;
+    }
+    return signer 
+      ? new Contract(CONTRACT_ADDRESS, ERC721_ABI, signer)
+      : new Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
+  }, [provider, signer]);
 
   useEffect(() => {
     if (contract && provider) {
       loadContractInfo();
+    } else {
+      setError(null);
+      setName('');
+      setSymbol('');
+      setBalance(0);
     }
-  }, [contract, provider]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [CONTRACT_ADDRESS, provider, signer]);
 
   const loadContractInfo = async () => {
-    if (!contract) return;
+    if (!contract || !provider) return;
 
     try {
       setLoading(true);
@@ -37,12 +46,23 @@ export function useERC721(provider, signer) {
       setSymbol(contractSymbol);
 
       if (signer) {
-        const address = await signer.getAddress();
-        const userBalance = await contract.balanceOf(address);
-        setBalance(userBalance.toString());
+        try {
+          const address = await signer.getAddress();
+          const userBalance = await contract.balanceOf(address);
+          setBalance(userBalance.toString());
+        } catch (balanceErr) {
+          // Balance error is not critical, just set to 0
+          setBalance('0');
+        }
       }
     } catch (err) {
-      setError(err.message);
+      // Only show persistent errors, ignore transient network issues
+      const errorMessage = err.reason || err.message || 'Unknown error';
+      if (!errorMessage.includes('missing provider') && 
+          !errorMessage.includes('network') &&
+          !errorMessage.includes('NETWORK_ERROR')) {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
