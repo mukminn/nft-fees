@@ -54,8 +54,8 @@ function App() {
 
         {/* Contract Error */}
         {mintError && mintError.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-            <p className="text-red-600 text-sm">{mintError}</p>
+          <div className="bg-red-50 border border-red-200 rounded-full p-4 mb-6">
+            <p className="text-red-600 text-sm text-center">{mintError}</p>
           </div>
         )}
 

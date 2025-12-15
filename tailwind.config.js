@@ -12,9 +12,14 @@ export default {
       },
       keyframes: {
         cloud: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100vw)' },
+          '0%': { transform: 'translateX(-100%) translateY(0px)' },
+          '50%': { transform: 'translateX(50vw) translateY(-10px)' },
+          '100%': { transform: 'translateX(100vw) translateY(0px)' },
         },
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'water': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
       },
     },
   },
